@@ -1,0 +1,144 @@
+{
+  "name": "codelearning",
+  "displayName": "Code Learning",
+  "description": "Aprende a programar explicando tu código: lecciones y chat lateral derecho. Reusa los modelos de GhostCode si ya lo tienes instalado.",
+  "version": "0.10.0",
+  "publisher": "edgar",
+  "author": {
+    "name": "GMR027",
+    "url": "https://github.com/GMR027"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GMR027/ghostcode.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Education",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "learning",
+    "education",
+    "ai",
+    "chat",
+    "ghostcode"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codelearning.openChat",
+        "title": "Code Learning: Abrir chat (lado derecho)"
+      },
+      {
+        "command": "codelearning.focus",
+        "title": "Code Learning: Mostrar vista"
+      },
+      {
+        "command": "codelearning.installGhostcode",
+        "title": "Code Learning: Instalar GhostCode"
+      },
+      {
+        "command": "codelearning.exportProgress",
+        "title": "Code Learning: Exportar avance"
+      },
+      {
+        "command": "codelearning.askSelection",
+        "title": "Code Learning: Explicar selección"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codelearning",
+          "title": "Code Learning",
+          "icon": "media/codelearning.svg"
+        }
+      ]
+    },
+    "views": {
+      "codelearning": [
+        {
+          "type": "webview",
+          "id": "codelearning.chatView",
+          "name": "Code Learning"
+        }
+      ]
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "codelearning.askSelection",
+          "when": "editorHasSelection",
+          "group": "1_modification@95"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Code Learning",
+      "properties": {
+        "codelearning.backend": {
+          "type": "string",
+          "enum": ["auto", "local", "opencode"],
+          "default": "auto",
+          "description": "auto = el mejor modelo que ya cargaron GhostCode o MagicTools; local = un modelo de Ollama elegido; opencode = el CLI de OpenCode."
+        },
+        "codelearning.level": {
+          "type": "string",
+          "enum": ["beginner", "intermediate", "advanced"],
+          "default": "beginner",
+          "description": "Nivel del alumno: define la profundidad del temario."
+        },
+        "codelearning.language": {
+          "type": "string",
+          "enum": ["es", "en", "pt", "fr"],
+          "default": "es",
+          "description": "Idioma de las lecciones."
+        },
+        "codelearning.local.url": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "URL de Ollama (solo si no se usa GhostCode)."
+        },
+        "codelearning.opencode.model": {
+          "type": "string",
+          "default": "",
+          "description": "Modelo de OpenCode en formato proveedor/modelo. Vacío = el que OpenCode tenga por defecto."
+        },
+        "codelearning.notesModel": {
+          "type": "string",
+          "default": "",
+          "description": "Modelo de Ollama más grande solo para redactar las notas de las lecciones. Vacío = el mismo del análisis."
+        },
+        "codelearning.local.model": {
+          "type": "string",
+          "default": "",
+          "description": "Modelo de Ollama para el origen «IA local»."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node test/run.mjs",
+    "package": "npm run typecheck && node esbuild.mjs --production && npx @vscode/vsce package --no-dependencies --allow-missing-repository -o codelearning-0.10.0.vsix",
+    "vscode:prepublish": "node esbuild.mjs --production"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.3"
+  }
+}

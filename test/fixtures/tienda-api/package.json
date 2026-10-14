@@ -1,0 +1,14 @@
+{
+  "name": "tienda-api",
+  "version": "1.0.0",
+  "description": "API de una tienda con Express y SQLite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
