@@ -142,11 +142,29 @@ function runCli(bin: string, args: string[], ms: number, signal?: AbortSignal): 
   });
 }
 
+/** Gratis primero, luego los de suscripción (OpenCode Go) y después los de la cuenta del usuario. */
+const modelRank = (id: string) => (/free/i.test(id) ? 0 : id.startsWith("opencode-go/") ? 1 : 2);
+
 export async function opencodeModels(): Promise<string[]> {
   const bin = opencodeBin();
   if (!bin) return [];
   const out = await runCli(bin, ["models", "--standalone"], 15_000).catch(() => "");
-  return out.split("\n").map((l) => l.trim()).filter((l) => /^[\w.-]+\/\S+$/.test(l));
+  return out
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => /^[\w.-]+\/\S+$/.test(l))
+    .sort((a, b) => modelRank(a) - modelRank(b) || a.localeCompare(b));
+}
+
+function opencodeError(err: { type?: string; status?: number; message?: string; data?: { message?: string } } | undefined): Error {
+  const raw = err?.data?.message ?? err?.message ?? "error de OpenCode";
+  if (err?.type === "provider.free-limit" || err?.status === 429 || /usage limit|límite/i.test(raw)) {
+    return new Error("OpenCode: has alcanzado el límite de uso gratuito. Suscríbete a OpenCode Go o elige otro modelo.");
+  }
+  if (/auth|credential|log ?in|api key|unauthori/i.test(raw)) {
+    return new Error("OpenCode: no hay una sesión iniciada. Ejecuta «opencode auth login».");
+  }
+  return new Error(raw);
 }
 
 export async function opencodeAsk(model: string, system: string, prompt: string, signal?: AbortSignal): Promise<string> {
@@ -160,8 +178,8 @@ export async function opencodeAsk(model: string, system: string, prompt: string,
   for (const line of out.split("\n")) {
     if (!line.trim().startsWith("{")) continue;
     try {
-      const j = JSON.parse(line) as { type?: string; part?: { type?: string; text?: string }; error?: { message?: string; data?: { message?: string } } };
-      if (j.type === "error") throw new Error(j.error?.data?.message ?? j.error?.message ?? "error de OpenCode");
+      const j = JSON.parse(line) as { type?: string; part?: { type?: string; text?: string }; error?: { type?: string; status?: number; message?: string; data?: { message?: string } } };
+      if (j.type === "error") throw opencodeError(j.error);
       if (j.part?.type === "text" && j.part.text) text += j.part.text;
     } catch (e) {
       if ((e as Error).name !== "SyntaxError") throw e;
